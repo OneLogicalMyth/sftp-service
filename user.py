@@ -43,7 +43,7 @@ class user():
 
 
     def new_user(self,username,password):
-	    enc_password = self.encrypt_pass(password)
+	enc_password = self.encrypt_pass(password)
         c = subprocess.Popen(['useradd','-g','sftp','-d','/var/sftp/' + username,'-N','-p',enc_password,username], stdout=subprocess.PIPE)
         out, err = c.communicate()
         exit_c = c.wait()
