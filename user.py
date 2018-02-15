@@ -4,7 +4,7 @@ class user():
 
     def encrypt_pass(self,password):
         c = subprocess.Popen(['mkpasswd', '-m', 'sha-512', password], stdout=subprocess.PIPE)
-        out, err = mkpass_c.communicate()
+        out, err = c.communicate()
         exit_c = c.wait()
 
         return out.rstrip()
@@ -37,4 +37,15 @@ class user():
         chmodu_out, chmodu_err = chmodu_c.communicate()
         chmodu_exit_c = chmodu_c.wait()
 
-        return 1
+        exit_code = mkdir_exit_c + chown_exit_c + chmod_exit_c + chownu_exit_c + chmodu_exit_c
+
+        return int(exit_code)
+
+
+    def new_user(self,username,password):
+	    enc_password = self.encrypt_pass(password)
+        c = subprocess.Popen(['useradd','-g','sftp','-d','/var/sftp/' + username,'-N','-p',enc_password,username], stdout=subprocess.PIPE)
+        out, err = c.communicate()
+        exit_c = c.wait()
+
+        return exit_c
