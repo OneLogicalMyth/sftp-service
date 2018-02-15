@@ -1,6 +1,7 @@
 from flask import Flask, abort, request, jsonify
 from os.path import abspath, exists
-import sys, uuid, json
+from user import user
+import sys, uuid, json, subprocess
 
 f_config = abspath("config.json")
 
@@ -56,8 +57,10 @@ def add_user():
         abort(403)
 
     # now create the user and secure for SFTP
-    # TODO
+    nu = user()
+    plaintext_password = str(uuid.uuid4())[0:13]
+    encrypted_password = nu.encrypt_pass(plaintext_password)
 
     # return the result
-    out = jsonify({'username': username, 'password': 'Password1', 'result': 'OK'})
+    out = jsonify({'username': username, 'password': plaintext_password, 'result': 'OK'})
     return out, 200
