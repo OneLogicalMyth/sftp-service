@@ -15,3 +15,26 @@ class user():
         exit_c = c.wait()
 
         return out.rstrip()
+
+    def new_home(self,username):
+        mkdir_c = subprocess.Popen(['mkdir','-p','/var/sftp/' + username + '/upload'], stdout=subprocess.PIPE)
+        mkdir_out, mkdir_err = mkdir_c.communicate()
+        mkdir_exit_c = mkdir_c.wait()
+
+        chown_c = subprocess.Popen(['chown','root','/var/sftp/' + username], stdout=subprocess.PIPE)
+        chown_out, chown_err = chown_c.communicate()
+        chown_exit_c = chown_c.wait()
+
+        chmod_c = subprocess.Popen(['chmod','go-w','/var/sftp/' + username], stdout=subprocess.PIPE)
+        chmod_out, chmod_err = chmod_c.communicate()
+        chmod_exit_c = chmod_c.wait()
+
+        chownu_c = subprocess.Popen(['chown',username + ':sftp','/var/sftp/' + username + '/upload'], stdout=subprocess.PIPE)
+        chownu_out, chownu_err = chownu_c.communicate()
+        chownu_exit_c = chownu_c.wait()
+
+        chmodu_c = subprocess.Popen(['chmod','ug+rwX','/var/sftp/' + username + '/upload'], stdout=subprocess.PIPE)
+        chmodu_out, chmodu_err = chmodu_c.communicate()
+        chmodu_exit_c = chmodu_c.wait()
+
+        return 1
