@@ -1,6 +1,6 @@
 import subprocess
 
-class newuser():
+class user():
 
     def encrypt_pass(self,password):
         c = subprocess.Popen(['mkpasswd', '-m', 'sha-512', password], stdout=subprocess.PIPE)
