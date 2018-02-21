@@ -7,7 +7,7 @@ apt upgrade -y
 
 # Install requried packages
 echo "[*] Installing the required packages"
-apt install pwgen,whois,pythonpip,openssh-server
+apt install pwgen whois pythonpip openssh-server
 
 # Create sftp user, groups and directories
 echo "[*] Creating the SFTP directory"
