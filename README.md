@@ -4,6 +4,8 @@ A small project to get me to learn Python; this will present an API that will al
 **This is not designed for production use yet, use with caution.**
 
 # Setup
+`wget -O - -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/setup.sh | sudo bash`
+
 On the Ubuntu host install Python pip by issuing the command `sudo apt install python-pip` and then install Flask by issuing the command `sudo pip install Flask`.
 
 # Running the App
