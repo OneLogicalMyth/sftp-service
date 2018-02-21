@@ -35,7 +35,7 @@ echo "" >> /etc/ssh/sshd_config
 # Create the start.sh script
 echo "[*] Creating the start.sh script, this starts the development flask service"
 echo "#!/bin/bash" > /var/sftp/api/start.sh
-echo "cd $(dirname "$0")" >> /var/sftp/api/start.sh
+echo 'cd $(dirname "$0")' >> /var/sftp/api/start.sh
 echo "export FLASK_APP=api.py" >> /var/sftp/api/start.sh
 echo "flask run" >> /var/sftp/api/start.sh
 chmod 445 /var/sftp/api/start.sh
