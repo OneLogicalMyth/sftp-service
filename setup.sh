@@ -41,9 +41,9 @@ echo "flask run" >> /var/sftp/api/start.sh
 chmod 445 /var/sftp/api/start.sh
 
 # download api files
-sudo wget -O /var/sftp/api/api.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.py
-sudo wget -O /var/sftp/api/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/user.py
-sudo wget -O /var/sftp/api/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/config.json
+wget -O /var/sftp/api/api.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.py
+wget -O /var/sftp/api/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/user.py
+wget -O /var/sftp/api/config.json -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/config.json
 
 # Configure sudo access for the sftp-service user
 echo "[*] Adding sftp_script sudo file to allow no password for sftp-service for start.sh"
