@@ -7,4 +7,4 @@ A small project to get me to learn Python; this will present an API that will al
 `wget -O - -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/setup.sh | sudo bash`
 
 # Running the App
-Launch a terminal and change directory to the apps location, then issue `FLASK_APP=api.py flask run`.
+`sudo -u sftp-service -i sudo /var/sftp/api/start.sh`
