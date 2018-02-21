@@ -35,6 +35,7 @@ echo "" >> /etc/ssh/sshd_config
 # Create the start.sh script
 echo "[*] Creating the start.sh script, this starts the development flask service"
 echo "#!/bin/bash" > /var/sftp/api/start.sh
+echo "cd $(dirname "$0")" >> /var/sftp/api/start.sh
 echo "export FLASK_APP=api.py" >> /var/sftp/api/start.sh
 echo "flask run" >> /var/sftp/api/start.sh
 chmod 445 /var/sftp/api/start.sh
@@ -42,11 +43,18 @@ chmod 445 /var/sftp/api/start.sh
 # download api files
 sudo wget -O /var/sftp/api/api.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.py
 sudo wget -O /var/sftp/api/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/user.py
+sudo wget -O /var/sftp/api/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/config.json
 
 # Configure sudo access for the sftp-service user
 echo "[*] Adding sftp_script sudo file to allow no password for sftp-service for start.sh"
 echo "sftp-service ALL=(ALL) NOPASSWD:/var/sftp/api/start.sh" > /etc/sudoers.d/sftp_script
 chmod 440 /etc/sudoers.d/sftp_script
+
+# Configure pip and Flask
+echo "[*] Upgrading pip"
+pip install --upgrade pip
+echo "[*] Installing flask"
+pip install Flask
 
 # Output username and password
 echo "[*] Setup complete"
