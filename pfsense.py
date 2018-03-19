@@ -42,10 +42,16 @@ def login(pfsense,username,password):
 	login_payload = {'__csrf_magic': csrf_token,'usernamefld': username,'passwordfld': password,'login': 'Sign+In'}
 	s.post(pfsense, data=login_payload, verify=False)
 
-	return s
+	check_login = s.get(pfsense, verify=False)
+
+	login_user  = findall('usepost>Logout \((.*?)\)', check_login.text)
+	if len(login_user) == 1:
+		return s
+	else:
+		return 'Not logged in'
 
 
 ses = login(args.pfsense,args.username,args.password)
 result = get_alias(ses,'0',args.pfsense)
 
-print result
+print ses
