@@ -3,55 +3,98 @@
 from requests import Session
 from re import findall
 from argparse import ArgumentParser
+import datetime
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-parser = ArgumentParser()
-parser.add_argument('--pfsense', type=str, metavar='address', required=True, help="Firewall base url")
-parser.add_argument('--username', type=str, metavar='username', required=True, help="Firewall login username")
-parser.add_argument('--password', type=str, metavar='password', required=True, help="Firewall login password")
-#parser.add_argument('--alias', type=str, metavar='alias id', required=True, help="The firewall alias ID (extract this from the alias URL)")
-parser.add_argument('--ip', type=str, default="IP to add", help="The reason the given IPs get blocked")
-parser.add_argument('--description', type=str, default="IP to add", help="A description to add to the alias entry")
-args = parser.parse_args()
+class pfsense(object):
 
+    def __init__(self,url):
+        self.alias_edit_url = url + '/firewall_aliases_edit.php'
+        self.alias_list_url = url + '/firewall_aliases.php'
+        self.url = url
 
-def get_csrf(content):
-	csrf_token = findall('name=\'__csrf_magic\'\s*value="([^"]+)"', content)[0]
-	return csrf_token
+    def merge_dicts(self,*dict_args):
+        result = {}
+        for dictionary in dict_args:
+            result.update(dictionary)
+        return result
 
-def get_alias(session,alias,base_url):
+    def get_csrf(self,content):
+        csrf_token = findall('name=\'__csrf_magic\'\s*value="([^"]+)"', content)[0]
+        return csrf_token
 
-	alias_edit_url = '/firewall_aliases_edit.php'
-	r = session.get(base_url + alias_edit_url + '?id=' + alias, verify=False)
-	text = r.text
+    def apply_changes(self,pfsession):
+        response = pfsession.get(self.alias_list_url, verify=False)
+        csrf_token = self.get_csrf(response.text)
+        apply_payload = {
+                        '__csrf_magic': csrf_token,
+                        'apply': 'Apply changes',
+                        'tab': 'ip'
+                        }
+        response = pfsession.post(self.alias_list_url, data=apply_payload, verify=False)
+        return response.status_code
 
-	#alias_name = findall('addressarray = \["([^"]+)', text)[0]
-	addresses  = findall('name="(address\d+)".*?value="([^"]+)', text)
+    def add_alias(self,pfsession,alias,address,detail):
+        alias_data = self.get_alias(pfsession,alias)
+        descr_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        next_id = str(len(alias_data['address_ip']))
+        alias_data['address_ip'].append((u'address' + next_id,u'' + address))
+        alias_data['address_detail'].append((u'detail' + next_id,u'' + detail))
+        addresses = dict(alias_data['address_ip'])
+        details = dict(alias_data['address_detail'])
+        alias_payload_base = {
+                             '__csrf_magic': alias_data['csrf'],
+                             'origname': alias_data['alias_name'],
+                             'name': alias_data['alias_name'],
+                             'id': alias,
+                             'tab': 'ip',
+                             'descr': 'Last updated on the ' + descr_date,
+                             'type': 'host',
+                             'save': 'Save',
+                             }
+        alias_payload = self.merge_dicts(alias_payload_base,addresses,details)
+        response = pfsession.post(self.alias_edit_url, data=alias_payload, verify=False)
+        return response.status_code
 
-	return addresses
+    def get_alias(self,pfsession,alias):
+        response = pfsession.get(self.alias_edit_url + '?id=' + alias, verify=False)
+        alias_name = findall('name="origname".*?value="([^"]+)', response.text)[0]
+        addresses  = findall('name="(address\d+)".*?value="([^"]+)', response.text)
+        details = findall('name="(detail\d+)".*?value="([^"]+)', response.text)
+	csrf_token = self.get_csrf(response.text)
+        results = {
+                  'alias_name': alias_name,
+                  'address_ip': addresses,
+                  'address_detail': details,
+                  'csrf': csrf_token
+                  }
+        return results
 
+    def login(self,username,password):
+        print 'Logging in with ' + username + ' - ' + password
+        pfsession = Session()
+        response = pfsession.get(self.url, verify=False)
+        csrf_token = self.get_csrf(response.text)
+        login_payload = {
+                        '__csrf_magic': csrf_token,
+                        'usernamefld': username,
+                        'passwordfld': password,
+                        'login': 'Sign+In'
+                        }
+        pfsession.post(self.url, data=login_payload, verify=False)
 
-def login(pfsense,username,password):
-
-	s = Session()
-	r = s.get(pfsense, verify=False)
-	text = r.text
-	csrf_token = get_csrf(text)
-
-	login_payload = {'__csrf_magic': csrf_token,'usernamefld': username,'passwordfld': password,'login': 'Sign+In'}
-	s.post(pfsense, data=login_payload, verify=False)
-
-	check_login = s.get(pfsense, verify=False)
-
-	login_user  = findall('usepost>Logout \((.*?)\)', check_login.text)
-	if len(login_user) == 1:
-		return s
+        check_login = pfsession.get(self.url, verify=False)
+        login_user  = findall('usepost>Logout \((.*?)\)', check_login.text)
+        if len(login_user) == 1:
+            return pfsession
 	else:
-		return 'Not logged in'
+            return false
 
 
-ses = login(args.pfsense,args.username,args.password)
-result = get_alias(ses,'0',args.pfsense)
+pf = pfsense('https://192.1.1.1')
+session = pf.login('admin','pfsense')
+result_add = pf.add_alias(session,'0','1.1.1.1','testing add alias')
+pf.apply_changes(session)
 
-print ses
+print result_add
