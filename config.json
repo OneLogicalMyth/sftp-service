@@ -1,4 +1,8 @@
 {
    "token": "some-random-token-string",
-   "server": "SFTP API Beta"
+   "server": "SFTP API Beta",
+   "pfsense_url": "http://1.1.1.1",
+   "pfsense_usr": "admin",
+   "pfsense_pwd": "pfsense",
+   "pfsense_aid": "0"
 }
