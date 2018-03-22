@@ -70,7 +70,6 @@ class pfsense(object):
         return results
 
     def login(self,username,password):
-        print 'Logging in with ' + username + ' - ' + password
         pfsession = Session()
         response = pfsession.get(self.url, verify=False)
         csrf_token = self.get_csrf(response.text)
@@ -87,4 +86,4 @@ class pfsense(object):
         if len(login_user) == 1:
             return pfsession
 	else:
-            return false
+            return bool(0)
