@@ -1,7 +1,8 @@
 from flask import Flask, abort, request, jsonify
 from os.path import abspath, exists
 from user import user
-import sys, uuid, json, re
+from pfsense import pfsense
+import sys, uuid, json, re, datetime
 
 f_config = abspath("config.json")
 
@@ -17,6 +18,14 @@ with open(f_config, 'r') as json_data:
 # set vars based on config file
 SERVER_NAME = config.get('server','SFTP API Beta')
 CONFIG_TOKEN = config.get('token',str(uuid.uuid4()))
+PFSENSE_URL = config.get('pfsense_url',None)
+PFSENSE_USR = config.get('pfsense_usr',None)
+PFSENSE_PWD = config.get('pfsense_pwd',None)
+PFSENSE_AID = config.get('pfsense_aid',None)
+
+if not PFSENSE_URL or not PFSENSE_USR or not PFSENSE_PWD or not PFSENSE_AID:
+    print "pfsense configuration missing in config.json"
+    sys.exit()
 
 print ' * API starting'
 print ' * Access token is ' + CONFIG_TOKEN
@@ -66,10 +75,21 @@ def add_user():
     if username_exists == 1:
         abort(400,description="Username already exists")
 
+    # validate the external IP
+    if not re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", extip):
+        abort(400,description="Invalid external IP address given")
+
     # create the users home folder with correct permissions
     plaintext_password = str(uuid.uuid4())[0:13]
     new_home = u.new_home(username)
     user_created = u.new_user(username,plaintext_password)
+
+    # add IP to alias for whitelisting
+    alias_detail = username + '|' + str(datetime.datetime.now().isoformat())
+    pf = pfsense(PFSENSE_URL)
+    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
+    result_add = pf.add_alias(pfsession,PFSENSE_AID,extip,alias_detail)
+    result_apply = pf.apply_changes(pfsession)
 
     # return the result
     out = jsonify({'username': username, 'password': plaintext_password})
