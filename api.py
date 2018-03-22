@@ -75,9 +75,15 @@ def add_user():
     if username_exists == 1:
         abort(400,description="Username already exists")
 
-    # validate the external IP
+    # validated the external IP
     if not re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", extip):
         abort(400,description="Invalid external IP address given")
+
+    # check if you can login to pfsense first
+    pf = pfsense(PFSENSE_URL)
+    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
+    if not pfsession:
+        abort(400,description="Failed to login to pfsense")
 
     # create the users home folder with correct permissions
     plaintext_password = str(uuid.uuid4())[0:13]
@@ -86,8 +92,6 @@ def add_user():
 
     # add IP to alias for whitelisting
     alias_detail = username + '|' + str(datetime.datetime.now().isoformat())
-    pf = pfsense(PFSENSE_URL)
-    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
     result_add = pf.add_alias(pfsession,PFSENSE_AID,extip,alias_detail)
     result_apply = pf.apply_changes(pfsession)
 
