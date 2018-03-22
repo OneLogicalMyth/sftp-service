@@ -90,11 +90,3 @@ class pfsense(object):
             return pfsession
 	else:
             return false
-
-
-pf = pfsense('https://192.1.1.1')
-session = pf.login('admin','pfsense')
-result_add = pf.add_alias(session,'0','1.1.1.1','testing add alias')
-pf.apply_changes(session)
-
-print result_add
