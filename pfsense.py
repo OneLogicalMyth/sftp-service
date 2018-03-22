@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from requests import Session
 from re import findall
 from argparse import ArgumentParser
