@@ -1,5 +1,14 @@
 # Description
-A small project to get me to learn Python; this will present an API that will allow you to create a new SFTP user on a Ubuntu host securely. Additionally, my intention is then to get it to hook into pfsense and add an external IP to an alias on the service.
+A small project to get me to learn Python; this will present an API that will allow you to create a new SFTP user on a Ubuntu host securely.
+
+## Currently Working
+* SFTP user created with all correct directory permissions for chroot to work
+* pfsense is updated with the provided external IP to allow access
+
+## Future Development
+* remove users 
+* update/add IPs to the pfsense alias
+* configure the setup script to configure Flask for production using best practices
 
 **This is not designed for production use yet, use with caution.**
 
