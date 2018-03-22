@@ -43,6 +43,7 @@ chmod 445 /var/sftp/api/start.sh
 # download api files
 wget -O /var/sftp/api/api.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.py
 wget -O /var/sftp/api/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/user.py
+wget -O /var/sftp/api/pfsense.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/pfsense.py
 wget -O /var/sftp/api/config.json -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/config.json
 
 # Configure sudo access for the sftp-service user
@@ -50,11 +51,12 @@ echo "[*] Adding sftp_script sudo file to allow no password for sftp-service for
 echo "sftp-service ALL=(ALL) NOPASSWD:/var/sftp/api/start.sh" > /etc/sudoers.d/sftp_script
 chmod 440 /etc/sudoers.d/sftp_script
 
-# Configure pip and Flask
+# Configure pip, requests and Flask
 echo "[*] Upgrading pip"
 pip install --upgrade pip
 echo "[*] Installing flask"
 pip install Flask
+pip install requests
 
 # Output username and password
 echo "[*] Setup complete"
