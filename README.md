@@ -8,7 +8,7 @@ A small project to get me to learn Python; this will present an API that will al
 ## Future Development
 * remove users 
 * update/add IPs to the pfsense alias
-* configure the setup script to configure Flask for production using best practices
+* ammend the setup script to configure Flask for production using best practices
 
 **This is not designed for production use yet, use with caution.**
 
