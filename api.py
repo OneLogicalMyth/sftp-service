@@ -92,8 +92,8 @@ def add_user():
 
     # create the users home folder with correct permissions
     plaintext_password = str(uuid.uuid4())[0:13]
-    new_home = u.new_home(username)
     user_created = u.new_user(username,plaintext_password)
+    new_home = u.new_home(username)
 
     # add IP to alias for whitelisting
     alias_detail = username + '|' + str(datetime.datetime.now().isoformat())
