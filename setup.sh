@@ -31,6 +31,7 @@ echo "    AllowTCPForwarding no" >> /etc/ssh/sshd_config
 echo "    X11Forwarding no" >> /etc/ssh/sshd_config
 echo "    ForceCommand internal-sftp" >> /etc/ssh/sshd_config
 echo "" >> /etc/ssh/sshd_config
+service sshd restart
 
 # download api files
 wget -O /var/sftp/api/api.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.py
@@ -72,3 +73,5 @@ echo ""
 echo "[READY]"
 echo "Send it a curl post request like:"
 echo "curl -H \"Content-Type: application/json\" -X POST -d '{\"token\":\"some-random-token-string\",\"username\":\"xyz\",\"extip\":\"1.1.1.1\"}' http://api-service.local/adduser"
+echo ""
+echo "Sometimes apache2 needs a further reload before use: service apache2 reload"
