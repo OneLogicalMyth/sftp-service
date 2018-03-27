@@ -7,7 +7,7 @@ apt upgrade -y
 
 # Install requried packages
 echo "[*] Installing the required packages"
-apt install pwgen whois python-pip openssh-server apache2 libapache2-mod-wsgi -y
+apt install pwgen whois python-pip openssh-server apache2 libapache2-mod-wsgi curl -y
 
 # Create sftp user, groups and directories
 echo "[*] Creating the SFTP directory"
