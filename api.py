@@ -53,6 +53,7 @@ def add_user():
     token = data.get('token',None)
     username = data.get('username',None)
     extip = data.get('extip',None)
+    alias = data.get('extip',PFSENSE_AID)
 
     # return 400 for missing arguments
     if token is None or username is None or extip is None:
@@ -69,6 +70,10 @@ def add_user():
     # check if username is valid
     if not re.match("^[a-z0-9]+$", username):
         abort(400,description="Username is invalid")
+
+    # check if pfsense alias is valid
+    if not re.match("^[0-9]+$", alias):
+        abort(400,description="The pfsense alias is invalid")
 
     # check if username exists already
     username_exists = int(u.check_user(username))
@@ -92,7 +97,7 @@ def add_user():
 
     # add IP to alias for whitelisting
     alias_detail = username + '|' + str(datetime.datetime.now().isoformat())
-    result_add = pf.add_alias(pfsession,PFSENSE_AID,extip,alias_detail)
+    result_add = pf.add_alias(pfsession,alias,extip,alias_detail)
     result_apply = pf.apply_changes(pfsession)
 
     # return the result
