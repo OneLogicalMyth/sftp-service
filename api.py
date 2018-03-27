@@ -53,7 +53,7 @@ def add_user():
     token = data.get('token',None)
     username = data.get('username',None)
     extip = data.get('extip',None)
-    alias = data.get('extip',PFSENSE_AID)
+    alias = data.get('alias',PFSENSE_AID)
 
     # return 400 for missing arguments
     if token is None or username is None or extip is None:
