@@ -43,7 +43,8 @@ wget -O /opt/sftp-service/api.wsgi -q https://raw.githubusercontent.com/OneLogic
 wget -O /etc/apache2/sites-available/api.conf -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.conf
 
 # secure the config file
-chmod 600 /opt/sftp-service/config.json
+chmod 460 /opt/sftp-service/config.json
+chown sftp-service /opt/sftp-service/config.json
 
 # Configure sudo access for the sftp-service user
 echo "[*] Adding sftp sudo file to allow some root access for the api"
