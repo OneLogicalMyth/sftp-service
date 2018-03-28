@@ -7,7 +7,7 @@ apt upgrade -y
 
 # Install requried packages
 echo "[*] Installing the required packages"
-apt install pwgen whois python-pip openssh-server apache2 libapache2-mod-wsgi curl -y
+apt install pwgen whois python-pip openssh-server apache2 libapache2-mod-wsgi curl libapache2-modsecurity -y
 
 # Create sftp user, groups and directories
 echo "[*] Creating the SFTP directory"
@@ -62,6 +62,12 @@ pip install requests
 
 # Add localhost entry for the site, this can be changed to anything later...
 printf "\n127.0.0.1 api-service.local\n" >> /etc/hosts
+
+# secure and tune apache a little
+a2dissite 000-default.conf
+a2dismod status auth_basic authn_core authn_file authz_host authz_user autoindex -f
+mv /etc/modsecurity/modsecurity.conf{-recommended,}
+printf '\nServerSignature Off\nServerTokens Prod\n' >> /etc/apache2/apache2.conf
 
 # Enabling site and restarting apache2
 a2ensite api.conf
