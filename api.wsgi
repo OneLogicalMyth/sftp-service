@@ -1,3 +1,3 @@
 import sys
-sys.path.append('/var/sftp/api')
+sys.path.append('/opt/sftp-service')
 from api import app as application
