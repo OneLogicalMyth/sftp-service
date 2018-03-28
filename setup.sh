@@ -11,7 +11,8 @@ apt install pwgen whois python-pip openssh-server apache2 libapache2-mod-wsgi cu
 
 # Create sftp user, groups and directories
 echo "[*] Creating the SFTP directory"
-mkdir -p /var/sftp/api
+mkdir -p /var/sftp
+mkdir -p /opt/sftp-service
 echo "[*] Creating the sftp group"
 groupadd sftp
 echo "[*] Creating the sftp-service user"
@@ -34,12 +35,15 @@ echo "" >> /etc/ssh/sshd_config
 service sshd restart
 
 # download api files
-wget -O /var/sftp/api/api.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.py
-wget -O /var/sftp/api/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/user.py
-wget -O /var/sftp/api/pfsense.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/pfsense.py
-wget -O /var/sftp/api/config.json -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/config.json
-wget -O /var/sftp/api/api.wsgi -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.wsgi
+wget -O /opt/sftp-service/api.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.py
+wget -O /opt/sftp-service/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/user.py
+wget -O /opt/sftp-service/pfsense.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/pfsense.py
+wget -O /opt/sftp-service/config.json -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/config.json
+wget -O /opt/sftp-service/api.wsgi -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.wsgi
 wget -O /etc/apache2/sites-available/api.conf -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.conf
+
+# secure the config file
+chmod 600 /opt/sftp-service/config.json
 
 # Configure sudo access for the sftp-service user
 echo "[*] Adding sftp sudo file to allow some root access for the api"
