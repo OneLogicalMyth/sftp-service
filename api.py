@@ -59,6 +59,7 @@ def get_ip():
     u = user();
     data = request.get_json(silent=True)
     token = data.get('token',None)
+    alias = data.get('alias',PFSENSE_AID)
     
     # return 400 for missing arguments
     if token is None or username is None or extip is None:
@@ -71,6 +72,10 @@ def get_ip():
     # compare token provided is the same to the config/generated token
     if not token == CONFIG_TOKEN:
         abort(403,description="Token is not valid")
+    
+    # check if pfsense alias is valid
+    if not re.match("^[0-9]+$", alias):
+        abort(400,description="The pfsense alias is invalid")
         
     # check if you can login to pfsense first
     pf = pfsense(PFSENSE_URL)
