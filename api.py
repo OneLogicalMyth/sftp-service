@@ -40,11 +40,68 @@ class localFlask(Flask):
 # start the application
 app = localFlask(__name__)
 
-# mask all other methods to /adduser
+# mask all other methods to /adduser, /addip
 @app.route('/adduser')
 def void_adduser():
     abort(404)
+    
+@app.route('/addip')
+def void_addip():
+    abort(404)
 
+# accept a POST request to /adduser
+@app.route('/addip',methods=['POST'])
+def add_ip():
+    data = request.get_json(silent=True)
+    token = data.get('token',None)
+    username = data.get('username',None)
+    extip = data.get('extip',None)
+    alias = data.get('alias',PFSENSE_AID)
+
+    # return 400 for missing arguments
+    if token is None or username is None or extip is None:
+        abort(400,description="You have an argument missing")
+
+    # if token is an empty string return 403
+    if not token:
+        abort(403,description="Token is not valid")
+
+    # compare token provided is the same to the config/generated token
+    if not token == CONFIG_TOKEN:
+        abort(403,description="Token is not valid")
+
+    # check if username is valid
+    if not re.match("^[a-z0-9]+$", username):
+        abort(400,description="Username is invalid")
+
+    # check if pfsense alias is valid
+    if not re.match("^[0-9]+$", alias):
+        abort(400,description="The pfsense alias is invalid")
+
+    # check if username exists already
+    username_exists = int(u.check_user(username))
+    if not username_exists == 1:
+        abort(400,description="Username does not exist, please create a user first")
+
+    # validated the external IP
+    if not re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", extip):
+        abort(400,description="Invalid external IP address given")
+
+    # check if you can login to pfsense first
+    pf = pfsense(PFSENSE_URL)
+    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
+    if not pfsession:
+        abort(400,description="Failed to login to pfsense")
+    
+    # add IP to alias for whitelisting
+    alias_detail = username + '|' + str(datetime.datetime.now().isoformat())
+    result_add = pf.add_alias(pfsession,alias,extip,alias_detail)
+    result_apply = pf.apply_changes(pfsession)
+    
+    # return the result
+    out = jsonify({'result': 'External IP added ok'})
+    return out, 200
+    
 # accept a POST request to /adduser
 @app.route('/adduser',methods=['POST'])
 def add_user():
