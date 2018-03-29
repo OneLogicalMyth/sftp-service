@@ -52,6 +52,7 @@ def void_addip():
 # accept a POST request to /adduser
 @app.route('/addip',methods=['POST'])
 def add_ip():
+    u = user()
     data = request.get_json(silent=True)
     token = data.get('token',None)
     username = data.get('username',None)
