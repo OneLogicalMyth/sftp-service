@@ -49,7 +49,42 @@ def void_adduser():
 def void_addip():
     abort(404)
 
-# accept a POST request to /adduser
+@app.route('/getip')
+def void_getip():
+    abort(404)
+
+# accept a POST request to /getip
+@app.route('/getip',methods=['POST'])
+def get_ip():
+    u = user();
+    data = request.get_json(silent=True)
+    token = data.get('token',None)
+    
+    # return 400 for missing arguments
+    if token is None or username is None or extip is None:
+        abort(400,description="You have an argument missing")
+
+    # if token is an empty string return 403
+    if not token:
+        abort(403,description="Token is not valid")
+
+    # compare token provided is the same to the config/generated token
+    if not token == CONFIG_TOKEN:
+        abort(403,description="Token is not valid")
+        
+    # check if you can login to pfsense first
+    pf = pfsense(PFSENSE_URL)
+    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
+    if not pfsession:
+        abort(400,description="Failed to login to pfsense")
+        
+    iplist = pf.get_alias(pfsession,alias)
+    
+    # return the result
+    out = json.dumps(iplist, ensure_ascii=False)
+    return out, 200
+    
+# accept a POST request to /addip
 @app.route('/addip',methods=['POST'])
 def add_ip():
     u = user()
