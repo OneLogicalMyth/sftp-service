@@ -62,7 +62,7 @@ def get_ip():
     alias = data.get('alias',PFSENSE_AID)
     
     # return 400 for missing arguments
-    if token is None or username is None or extip is None:
+    if token is None or alias is None:
         abort(400,description="You have an argument missing")
 
     # if token is an empty string return 403
