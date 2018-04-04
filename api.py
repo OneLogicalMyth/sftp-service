@@ -2,6 +2,7 @@ from flask import Flask, abort, request, jsonify
 from os.path import abspath, exists
 from user import user
 from pfsense import pfsense
+from helper import helper
 import sys, uuid, json, re, datetime
 
 f_config = abspath("config.json")
@@ -44,7 +45,7 @@ app = localFlask(__name__)
 @app.route('/adduser')
 def void_adduser():
     abort(404)
-    
+
 @app.route('/addip')
 def void_addip():
     abort(404)
@@ -60,7 +61,7 @@ def get_ip():
     data = request.get_json(silent=True)
     token = data.get('token',None)
     alias = data.get('alias',PFSENSE_AID)
-    
+
     # return 400 for missing arguments
     if token is None or alias is None:
         abort(400,description="You have an argument missing")
@@ -72,23 +73,25 @@ def get_ip():
     # compare token provided is the same to the config/generated token
     if not token == CONFIG_TOKEN:
         abort(403,description="Token is not valid")
-    
+
     # check if pfsense alias is valid
     if not re.match("^[0-9]+$", alias):
         abort(400,description="The pfsense alias is invalid")
-        
+
     # check if you can login to pfsense first
     pf = pfsense(PFSENSE_URL)
     pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
     if not pfsession:
         abort(400,description="Failed to login to pfsense")
-        
+
     iplist = pf.get_alias(pfsession,alias)
-    
+
     # return the result
-    out = json.dumps(iplist, ensure_ascii=False)
+    h = helper()
+    rawout = h.make_iplist(iplist)
+    out = json.dumps(rawout, ensure_ascii=False, indent=4)
     return out, 200
-    
+
 # accept a POST request to /addip
 @app.route('/addip',methods=['POST'])
 def add_ip():
@@ -133,16 +136,16 @@ def add_ip():
     pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
     if not pfsession:
         abort(400,description="Failed to login to pfsense")
-    
+
     # add IP to alias for whitelisting
     alias_detail = username + '|' + str(datetime.datetime.now().isoformat())
     result_add = pf.add_alias(pfsession,alias,extip,alias_detail)
     result_apply = pf.apply_changes(pfsession)
-    
+
     # return the result
     out = jsonify({'result': 'External IP added ok'})
     return out, 200
-    
+
 # accept a POST request to /adduser
 @app.route('/adduser',methods=['POST'])
 def add_user():
