@@ -61,13 +61,8 @@ def run_prereq_tasks():
     data = request.get_json(silent=True)
     token = data.get('token',None)
 
-    # if token is an empty string return 403
-    if not token:
-        bl.add(request.remote_addr)
-        abort(403,description="Token is not valid")
-
-    # compare token provided is the same to the config/generated token
-    if not token == CONFIG_TOKEN:
+    # if token is an empty string or does not match return 403
+    if not token or not token == CONFIG_TOKEN:
         bl.add(request.remote_addr)
         abort(403,description="Token is not valid")
 
