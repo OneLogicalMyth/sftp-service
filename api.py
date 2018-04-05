@@ -3,9 +3,11 @@ from os.path import abspath, exists
 from user import user
 from pfsense import pfsense
 from helper import helper
+from blacklist import blacklist
 import sys, uuid, json, re, datetime
 
 f_config = abspath("config.json")
+bl = blacklist()
 
 # check if the config.json file is present
 if not exists(f_config):
@@ -31,28 +33,43 @@ if not PFSENSE_URL or not PFSENSE_USR or not PFSENSE_PWD or not PFSENSE_AID:
 print ' * API starting'
 print ' * Access token is ' + CONFIG_TOKEN
 
-# class to overide the flask server so that the server response header is changed
-class localFlask(Flask):
-    def process_response(self, response):
-        #Every response will be processed here first
-        response.headers['server'] = SERVER_NAME
-        return(response)
-
 # start the application
-app = localFlask(__name__)
+app = Flask(__name__)
 
-# mask all other methods to /adduser, /addip
-@app.route('/adduser')
-def void_adduser():
-    abort(404)
+@app.before_request
+def run_prereq_tasks():
 
-@app.route('/addip')
-def void_addip():
-    abort(404)
+    # check if IP is black listed
+    with open('blacklist.json') as json_data:
+        d = json.load(json_data)
+        if request.remote_addr in d["blacklist"]:
+            abort(403,description="You have been blacklisted")
 
-@app.route('/getip')
-def void_getip():
-    abort(404)
+    # this API only supports POST
+    if not request.method == 'POST':
+        abort(404)
+
+    # this API only supports JSON
+    if not request.is_json:
+        abort(404)
+
+    # this API expects data
+    if not request.data:
+        abort(404)
+
+    # validate the token before any requests
+    data = request.get_json(silent=True)
+    token = data.get('token',None)
+
+    # if token is an empty string return 403
+    if not token:
+        bl.add(request.remote_addr)
+        abort(403,description="Token is not valid")
+
+    # compare token provided is the same to the config/generated token
+    if not token == CONFIG_TOKEN:
+        bl.add(request.remote_addr)
+        abort(403,description="Token is not valid")
 
 # accept a POST request to /getip
 @app.route('/getip',methods=['POST'])
@@ -63,16 +80,8 @@ def get_ip():
     alias = data.get('alias',PFSENSE_AID)
 
     # return 400 for missing arguments
-    if token is None or alias is None:
+    if alias is None:
         abort(400,description="You have an argument missing")
-
-    # if token is an empty string return 403
-    if not token:
-        abort(403,description="Token is not valid")
-
-    # compare token provided is the same to the config/generated token
-    if not token == CONFIG_TOKEN:
-        abort(403,description="Token is not valid")
 
     # check if pfsense alias is valid
     if not re.match("^[0-9]+$", alias):
@@ -103,16 +112,8 @@ def add_ip():
     alias = data.get('alias',PFSENSE_AID)
 
     # return 400 for missing arguments
-    if token is None or username is None or extip is None:
+    if username is None or extip is None:
         abort(400,description="You have an argument missing")
-
-    # if token is an empty string return 403
-    if not token:
-        abort(403,description="Token is not valid")
-
-    # compare token provided is the same to the config/generated token
-    if not token == CONFIG_TOKEN:
-        abort(403,description="Token is not valid")
 
     # check if username is valid
     if not re.match("^[a-z0-9]+$", username):
@@ -157,16 +158,8 @@ def add_user():
     alias = data.get('alias',PFSENSE_AID)
 
     # return 400 for missing arguments
-    if token is None or username is None or extip is None:
+    if username is None or extip is None:
         abort(400,description="You have an argument missing")
-
-    # if token is an empty string return 403
-    if not token:
-        abort(403,description="Token is not valid")
-
-    # compare token provided is the same to the config/generated token
-    if not token == CONFIG_TOKEN:
-        abort(403,description="Token is not valid")
 
     # check if username is valid
     if not re.match("^[a-z0-9]+$", username):
