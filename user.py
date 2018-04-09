@@ -49,3 +49,16 @@ class user():
         exit_c = c.wait()
 
         return exit_c
+
+    def remove_user(self,username):
+        deluser_c = subprocess.Popen(['sudo','deluser',username], stdout=subprocess.PIPE)
+        deluser_out, deluser_err = deluser_c.communicate()
+        deluser_exit_c = deluser_c.wait()
+
+        rm_c = subprocess.Popen(['sudo','rm','-rf','/var/sftp/' + username], stdout=subprocess.PIPE)
+        rm_out, rm_err = rm_c.communicate()
+        rm_exit_c = rm_c.wait()
+
+        exit_code = rm_exit_c + deluser_exit_c
+
+        return int(exit_code)
