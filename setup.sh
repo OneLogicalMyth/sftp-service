@@ -36,6 +36,9 @@ service sshd restart
 
 # download api files
 wget -O /opt/sftp-service/api.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.py
+wget -O /opt/sftp-service/blacklist.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/blacklist.py
+wget -O /opt/sftp-service/helper.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/helper.py
+wget -O /opt/sftp-service/slack.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/slack.py
 wget -O /opt/sftp-service/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/user.py
 wget -O /opt/sftp-service/pfsense.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/pfsense.py
 wget -O /opt/sftp-service/config.json -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/config.json
@@ -45,6 +48,10 @@ wget -O /etc/apache2/sites-available/api.conf -q https://raw.githubusercontent.c
 # secure the config file
 chmod 460 /opt/sftp-service/config.json
 chown sftp-service /opt/sftp-service/config.json
+
+# create an empty blacklist file
+echo '{ "blacklist": [] }' > /opt/sftp-service/blacklist.json
+chown sftp-service /opt/sftp-service/blacklist.json
 
 # Configure sudo access for the sftp-service user
 echo "[*] Adding sftp sudo file to allow some root access for the api"
