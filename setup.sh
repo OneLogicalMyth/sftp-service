@@ -59,6 +59,8 @@ echo "sftp-service ALL=(ALL) NOPASSWD:/bin/chown" > /etc/sudoers.d/sftp
 echo "sftp-service ALL=(ALL) NOPASSWD:/bin/chmod" >> /etc/sudoers.d/sftp
 echo "sftp-service ALL=(ALL) NOPASSWD:/usr/sbin/useradd" >> /etc/sudoers.d/sftp
 echo "sftp-service ALL=(ALL) NOPASSWD:/bin/mkdir" >> /etc/sudoers.d/sftp
+echo "sftp-service ALL=(ALL) NOPASSWD:/bin/rm" >> /etc/sudoers.d/sftp
+echo "sftp-service ALL=(ALL) NOPASSWD:/usr/sbin/deluser" >> /etc/sudoers.d/sftp
 chmod 440 /etc/sudoers.d/sftp
 
 # Configure pip, requests and Flask
