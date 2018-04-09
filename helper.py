@@ -29,7 +29,7 @@ class helper():
 
             ip = str(rawlist["address_ip"][count][1])
 
-            output.append({"username": username, "ip": ip, "status": status, "date": date})
+            output.append({"username": username, "ip": ip, "status": status, "datetime": date})
             count += 1
 
         return output
