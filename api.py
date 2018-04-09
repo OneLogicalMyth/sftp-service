@@ -202,7 +202,7 @@ def add_user():
 
     # send slack message
     if SLACK_WEBHOOK:
-            s.send_message('The user "' + username + ' has been created. The IP of ' + extip + ' has been whitelisted. This was requested by ' + request.remote_addr)
+            s.send_message('The user ' + username + ' has been created. The IP of ' + extip + ' has been whitelisted. This was requested by ' + request.remote_addr)
 
     # return the result
     out = jsonify({'username': username, 'password': plaintext_password, 'ip_added': extip})
