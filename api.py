@@ -4,6 +4,7 @@ from user import user
 from pfsense import pfsense
 from helper import helper
 from blacklist import blacklist
+from slack import slack
 import sys, uuid, json, re, datetime
 
 f_config = abspath("config.json")
@@ -25,6 +26,7 @@ PFSENSE_URL = config.get('pfsense_url',None)
 PFSENSE_USR = config.get('pfsense_usr',None)
 PFSENSE_PWD = config.get('pfsense_pwd',None)
 PFSENSE_AID = config.get('pfsense_aid',None)
+SLACK_WEBHOOK = config.get('slack_webhook',None)
 
 if not PFSENSE_URL or not PFSENSE_USR or not PFSENSE_PWD or not PFSENSE_AID:
     print "pfsense configuration missing in config.json"
@@ -32,6 +34,9 @@ if not PFSENSE_URL or not PFSENSE_USR or not PFSENSE_PWD or not PFSENSE_AID:
 
 print ' * API starting'
 print ' * Access token is ' + CONFIG_TOKEN
+if SLACK_WEBHOOK:
+    print ' * Slack notifications enabled ' + SLACK_WEBHOOK
+    s = slack(SLACK_WEBHOOK)
 
 # start the application
 app = Flask(__name__)
@@ -64,6 +69,8 @@ def run_prereq_tasks():
     # if token is an empty string or does not match return 403
     if not token or not token == CONFIG_TOKEN:
         bl.add(request.remote_addr)
+        if SLACK_WEBHOOK:
+            s.send_message('The IP ' + request.remote_addr + ' has been blacklisted due to an incorrect token')
         abort(403,description="Token is not valid")
 
 # accept a POST request to /getip
@@ -138,8 +145,12 @@ def add_ip():
     result_add = pf.add_alias(pfsession,alias,extip,alias_detail)
     result_apply = pf.apply_changes(pfsession)
 
+    # send slack messaage
+    if SLACK_WEBHOOK:
+        s.send_message('The user ' + username + ' has had the additional IP of ' extip ' added to the whitelisting. Requested from IP ' + request.remote_addr)
+
     # return the result
-    out = jsonify({'result': 'External IP added ok'})
+    out = jsonify({'username': username,'ip_added': extip})
     return out, 200
 
 # accept a POST request to /adduser
@@ -189,6 +200,10 @@ def add_user():
     result_add = pf.add_alias(pfsession,alias,extip,alias_detail)
     result_apply = pf.apply_changes(pfsession)
 
+    # send slack message
+    if SLACK_WEBHOOK:
+            s.send_message('The user "' + username + ' has been created. The IP of ' + extip + ' has been whitelisted. This was requested by ' + request.remote_addr)
+
     # return the result
-    out = jsonify({'username': username, 'password': plaintext_password})
+    out = jsonify({'username': username, 'password': plaintext_password, 'ip_added': extip})
     return out, 201
