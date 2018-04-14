@@ -15,7 +15,7 @@ A small project to get me to learn Python; this will present an API that will al
 # Setup
 ```
 sudo su
-wget -O - -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/setup.sh | sudo
+wget -O - -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/setup.sh | bash
 ```
 
 Once installed you can then start making use of the API using curl or any application you have developed to work with it.
