@@ -1,34 +1,31 @@
 import json
+from database import database
+from datetime import datetime, timedelta
 
 class blacklist():
 
     blacklist = 'blacklist.json'
 
+    def check(self,ip,timeout):
+        db = database()
+        result = db.get_blacklist(ip)
+        if result:
+            created = datetime.strptime(result[0]["created"], '%Y-%m-%d %H:%M:%S.%f')
+            expiry = created + timedelta(minutes = timeout)
+            print created
+            print expiry
+            if datetime.now() > expiry:
+                self.remove(ip)
+                return False
+            else:
+                return True
+        else:
+            return False
+
     def add(self,ip):
-        jsonFile = open(self.blacklist, "r") # Open the JSON file for reading
-        data = json.load(jsonFile) # Read the JSON into the buffer
-        jsonFile.close() # Close the JSON file
-
-        ## Working with buffered content
-        data["blacklist"].append(ip)
-
-        ## Save our changes to JSON file
-        jsonFile = open(self.blacklist, "w+")
-        jsonFile.write(json.dumps(data,indent=4))
-        jsonFile.close()
+        db = database()
+        db.add_blacklist(ip)
 
     def remove(self,ip):
-        jsonFile = open(self.blacklist, "r") # Open the JSON file for reading
-        data = json.load(jsonFile) # Read the JSON into the buffer
-        jsonFile.close() # Close the JSON file
-
-        ## Working with buffered content
-        try:
-            data["blacklist"].remove(ip)
-        except:
-            print 'IP does not exist on the blacklist'
-
-        ## Save our changes to JSON file
-        jsonFile = open(self.blacklist, "w+")
-        jsonFile.write(json.dumps(data,indent=4))
-        jsonFile.close()
+        db = database()
+        db.del_blacklist(ip)

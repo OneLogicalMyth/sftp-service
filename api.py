@@ -5,10 +5,16 @@ from pfsense import pfsense
 from helper import helper
 from blacklist import blacklist
 from slack import slack
-import sys, uuid, json, re, datetime
+from database import database
+import sys, uuid, json, re, datetime, logging
 
 f_config = abspath("config.json")
 bl = blacklist()
+
+# check database tables
+db = database()
+db.setup()
+db.close()
 
 # check if the config.json file is present
 if not exists(f_config):
@@ -27,6 +33,7 @@ PFSENSE_USR = config.get('pfsense_usr',None)
 PFSENSE_PWD = config.get('pfsense_pwd',None)
 PFSENSE_AID = config.get('pfsense_aid',None)
 SLACK_WEBHOOK = config.get('slack_webhook',None)
+BLACKLIST_TIMEOUT = int(config.get('blacklist_expiry_mins',60))
 
 if not PFSENSE_URL or not PFSENSE_USR or not PFSENSE_PWD or not PFSENSE_AID:
     print "pfsense configuration missing in config.json"
@@ -35,7 +42,7 @@ if not PFSENSE_URL or not PFSENSE_USR or not PFSENSE_PWD or not PFSENSE_AID:
 print ' * API starting'
 print ' * Access token is ' + CONFIG_TOKEN
 if SLACK_WEBHOOK:
-    print ' * Slack notifications enabled ' + SLACK_WEBHOOK
+    print 'Slack notifications enabled ' + SLACK_WEBHOOK
     s = slack(SLACK_WEBHOOK)
 
 # start the application
@@ -45,10 +52,9 @@ app = Flask(__name__)
 def run_prereq_tasks():
 
     # check if IP is black listed
-    with open('blacklist.json') as json_data:
-        d = json.load(json_data)
-        if request.remote_addr in d["blacklist"]:
-            abort(403,description="You have been blacklisted")
+    blacklisted = bl.check(request.remote_addr,BLACKLIST_TIMEOUT)
+    if blacklisted:
+        abort(403,description="You have been blacklisted")
 
     # this API only supports POST
     if not request.method == 'POST':
