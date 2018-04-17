@@ -33,3 +33,29 @@ class helper():
             count += 1
 
         return output
+
+
+    def make_iplistonly(self,rawlist):
+        u = user()
+
+        count = 0
+        output = {}
+        number = len(rawlist["address_detail"])
+
+        for _ in range(number):
+            detail = str(rawlist["address_detail"][count][1]).split('|')
+
+            if len(detail) == 2:
+                username = detail[0]
+            else:
+                username = detail[0]
+
+            ip = str(rawlist["address_ip"][count][1])
+
+            if username in output:
+                output[str(username)] = output[str(username)] + [ip]
+            else:
+                output[str(username)] = [ip]
+            count += 1
+
+        return output

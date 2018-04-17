@@ -1,4 +1,5 @@
 import subprocess
+from database import database
 
 class user():
 
@@ -42,13 +43,41 @@ class user():
         return int(exit_code)
 
 
-    def new_user(self,username,password):
-	enc_password = self.encrypt_pass(password)
+    def new_user(self,username,password,daysvalid,requestedby):
+        db = database()
+        db_user = {
+                    "username": username,
+                    "daysvalid": daysvalid,
+                    "requestedby": requestedby
+                  }
+        db.add_user(db_user)
+        db.close()
+
+        enc_password = self.encrypt_pass(password)
         c = subprocess.Popen(['sudo','useradd','-g','sftp','-d','/var/sftp/' + username,'-N','-p',enc_password,username], stdout=subprocess.PIPE)
         out, err = c.communicate()
         exit_c = c.wait()
 
         return exit_c
+
+    def get_user(self,username,iplist):
+        db = database()
+        db_user = db.get_user(username)
+        db.close()
+
+        for item in db_user:
+            fsize_c = subprocess.Popen(['du','-sh','/var/sftp/' + item["username"] + '/'], stdout=subprocess.PIPE)
+            fsize, err = fsize_c.communicate()
+            exit_fsize = fsize_c.wait()
+
+            item["folder_size"] = fsize.split('\t')[0]
+
+            if item["username"] in iplist:
+                item["whitelisted_ips"] = iplist[item["username"]]
+            else:
+                item["whitelisted_ips"] = None
+        
+        return db_user
 
     def remove_user(self,username):
         deluser_c = subprocess.Popen(['sudo','deluser',username], stdout=subprocess.PIPE)

@@ -34,6 +34,7 @@ PFSENSE_PWD = config.get('pfsense_pwd',None)
 PFSENSE_AID = config.get('pfsense_aid',None)
 SLACK_WEBHOOK = config.get('slack_webhook',None)
 BLACKLIST_TIMEOUT = int(config.get('blacklist_expiry_mins',60))
+DAYS_VALID = config.get('days_valid',30)
 
 if not PFSENSE_URL or not PFSENSE_USR or not PFSENSE_PWD or not PFSENSE_AID:
     print "pfsense configuration missing in config.json"
@@ -167,6 +168,7 @@ def add_user():
     token = data.get('token',None)
     username = data.get('username',None)
     extip = data.get('extip',None)
+    daysvalid = data.get('daysvalid',DAYS_VALID)
     alias = data.get('alias',PFSENSE_AID)
 
     # return 400 for missing arguments
@@ -180,6 +182,10 @@ def add_user():
     # check if pfsense alias is valid
     if not re.match("^[0-9]+$", alias):
         abort(400,description="The pfsense alias is invalid")
+    
+    # check if pfsense alias is valid
+    if not re.match("^[0-9]+$", daysvalid):
+        abort(400,description="The number of days valid is invalid")
 
     # check if username exists already
     username_exists = int(u.check_user(username))
@@ -198,7 +204,7 @@ def add_user():
 
     # create the users home folder with correct permissions
     plaintext_password = str(uuid.uuid4())[0:13]
-    user_created = u.new_user(username,plaintext_password)
+    user_created = u.new_user(username,plaintext_password,daysvalid,request.remote_addr)
     new_home = u.new_home(username)
 
     # add IP to alias for whitelisting
@@ -213,3 +219,36 @@ def add_user():
     # return the result
     out = jsonify({'username': username, 'password': plaintext_password, 'ip_added': extip})
     return out, 201
+
+# accept a POST request to /getuser
+@app.route('/getuser',methods=['POST'])
+def get_user():
+    u = user()
+    data = request.get_json(silent=True)
+    username = data.get('username',None)
+    alias = data.get('alias',PFSENSE_AID)
+
+    # check if you can login to pfsense first
+    pf = pfsense(PFSENSE_URL)
+    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
+    if not pfsession:
+        abort(400,description="Failed to login to pfsense")
+
+    iplist = pf.get_alias(pfsession,alias)
+
+    # allow no username value to return all users
+    if not username is None:
+        # check if username is in the valid format
+        if not re.match("^[a-z0-9]+$", username):
+            abort(400,description="Username is invalid")
+
+        # check if username exists already
+        username_exists = int(u.check_user(username))
+        if not username_exists == 1:
+            abort(400,description="Username does not exist")
+
+    h = helper()
+    iplistonly = h.make_iplistonly(iplist)
+    user_data = u.get_user(username,iplistonly)
+
+    return jsonify(user_data), 200

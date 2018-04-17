@@ -25,7 +25,7 @@ class database(object):
 		cur = self.db.cursor()
 
 		if not username:
-			cur.execute('SELECT id, username, created, daysvalid, requestedby FROM users')
+			cur.execute('SELECT username, created, daysvalid, requestedby FROM users')
 		else:
 			cur.execute('SELECT username, created, daysvalid, requestedby FROM users WHERE username=:username', {'username':username})
 
@@ -47,9 +47,9 @@ class database(object):
 		cur = self.db.cursor()
 
 		if not ip:
-			cur.execute('SELECT id, ip, created FROM blacklist')
+			cur.execute('SELECT ip, created FROM blacklist')
 		else:
-			cur.execute('SELECT id, ip, created FROM blacklist WHERE ip=:ip', {'ip':ip})
+			cur.execute('SELECT ip, created FROM blacklist WHERE ip=:ip', {'ip':ip})
 
 		result = cur.fetchall()
 
