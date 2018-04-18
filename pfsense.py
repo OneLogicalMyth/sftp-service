@@ -88,7 +88,7 @@ class pfsense(object):
                              '__csrf_magic': alias_data['csrf'],
                              'origname': alias_data['alias_name'],
                              'name': alias_data['alias_name'],
-                             'id': '0',
+                             'id': alias,
                              'tab': 'ip',
                              'descr': 'Last updated on the ' + descr_date,
                              'type': 'host',
