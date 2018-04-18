@@ -111,7 +111,7 @@ class pfsense(object):
         pfsession.post(self.url, data=login_payload, verify=False)
 
         check_login = pfsession.get(self.url, verify=False)
-        login_user  = findall('usepost>Logout \((.*?)\)', check_login.text)
+        login_user  = findall('class="fa fa-sign-out" title="(.*?)"', check_login.text)
         if len(login_user) == 1:
             return pfsession
 	else:
