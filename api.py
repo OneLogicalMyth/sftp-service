@@ -34,7 +34,7 @@ PFSENSE_PWD = config.get('pfsense_pwd',None)
 PFSENSE_AID = config.get('pfsense_aid',None)
 SLACK_WEBHOOK = config.get('slack_webhook',None)
 BLACKLIST_TIMEOUT = int(config.get('blacklist_expiry_mins',60))
-DAYS_VALID = config.get('days_valid',30)
+DAYS_VALID = config.get('days_valid',"30")
 
 if not PFSENSE_URL or not PFSENSE_USR or not PFSENSE_PWD or not PFSENSE_AID:
     print "pfsense configuration missing in config.json"
@@ -183,7 +183,7 @@ def add_user():
     if not re.match("^[0-9]+$", alias):
         abort(400,description="The pfsense alias is invalid")
     
-    # check if pfsense alias is valid
+    # check if daysvalid is valid
     if not re.match("^[0-9]+$", daysvalid):
         abort(400,description="The number of days valid is invalid")
 

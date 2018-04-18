@@ -90,4 +90,8 @@ class user():
 
         exit_code = rm_exit_c + deluser_exit_c
 
+        db = database()
+        db_user = db.del_user(username)
+        db.close()
+
         return int(exit_code)
