@@ -63,9 +63,9 @@ else:
 # apply changes to pfsense and send slack notification
 if del_userlist:    
     result_apply = pf.apply_changes(pfsession)
-    message = 'SFTP Serivce automated maintenance has just run, the following users had expired and have been removed:\n' + out_delusers + update_summary
+    message = 'SFTP Service automated maintenance has just run, the following users had expired and have been removed:\n' + out_delusers + update_summary
 else:
-    message = 'SFTP Serivce automated maintenance has just run. You have no expired users to delete. Total user count is: ' + str(len(userlist)) + update_summary
+    message = 'SFTP Service automated maintenance has just run. You have no expired users to delete. Total user count is: ' + str(len(userlist)) + update_summary
 
 # print output
 if SLACK_WEBHOOK:
