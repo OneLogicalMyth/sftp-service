@@ -69,6 +69,35 @@ class pfsense(object):
                   }
         return results
 
+    def del_alias(self,pfsession,alias,username):
+        alias_data = self.get_alias(pfsession,alias)
+        descr_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        address_tmp = dict(alias_data['address_ip'])
+        detail_tmp = dict(alias_data['address_detail'])
+        details = {}
+        addresses = {}
+        count = 0
+        # loop values to remove IPs matching the username
+        for field, value in detail_tmp.iteritems():
+            if not value.startswith(username + '|'):
+                id = findall('\d+$', field)[0]
+                addresses['address' + str(count)] = address_tmp['address' + str(id)]
+                details['detail' + str(count)] = detail_tmp[field]
+                count += 1
+        alias_payload_base = {
+                             '__csrf_magic': alias_data['csrf'],
+                             'origname': alias_data['alias_name'],
+                             'name': alias_data['alias_name'],
+                             'id': '0',
+                             'tab': 'ip',
+                             'descr': 'Last updated on the ' + descr_date,
+                             'type': 'host',
+                             'save': 'Save',
+                             }
+        alias_payload = self.merge_dicts(alias_payload_base,addresses,details)
+        response = pfsession.post(self.alias_edit_url, data=alias_payload, verify=False)
+        return response.status_code
+
     def login(self,username,password):
         pfsession = Session()
         response = pfsession.get(self.url, verify=False)

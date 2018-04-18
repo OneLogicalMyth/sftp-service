@@ -228,14 +228,6 @@ def get_user():
     username = data.get('username',None)
     alias = data.get('alias',PFSENSE_AID)
 
-    # check if you can login to pfsense first
-    pf = pfsense(PFSENSE_URL)
-    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
-    if not pfsession:
-        abort(400,description="Failed to login to pfsense")
-
-    iplist = pf.get_alias(pfsession,alias)
-
     # allow no username value to return all users
     if not username is None:
         # check if username is in the valid format
@@ -247,8 +239,60 @@ def get_user():
         if not username_exists == 1:
             abort(400,description="Username does not exist")
 
+    # check if you can login to pfsense first
+    pf = pfsense(PFSENSE_URL)
+    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
+    if not pfsession:
+        abort(400,description="Failed to login to pfsense")
+
+    iplist = pf.get_alias(pfsession,alias)
+
     h = helper()
     iplistonly = h.make_iplistonly(iplist)
     user_data = u.get_user(username,iplistonly)
 
     return jsonify(user_data), 200
+
+# accept a POST request to /getuser
+@app.route('/deluser',methods=['POST'])
+def del_user():
+    u = user()
+    data = request.get_json(silent=True)
+    username = data.get('username',None)
+    alias = data.get('alias',PFSENSE_AID)
+
+    # return 400 for missing arguments
+    if username is None or alias is None:
+        abort(400,description="You have an argument missing")
+
+    # check if username is valid
+    if not re.match("^[a-z0-9]+$", username):
+        abort(400,description="Username is invalid")
+
+    # check if pfsense alias is valid
+    if not re.match("^[0-9]+$", alias):
+        abort(400,description="The pfsense alias is invalid")
+
+    # check if username exists already
+    username_exists = int(u.check_user(username))
+    if not username_exists == 1:
+        abort(400,description="Username does not exist")
+
+    # check if you can login to pfsense first
+    pf = pfsense(PFSENSE_URL)
+    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
+    if not pfsession:
+        abort(400,description="Failed to login to pfsense")
+
+    # delete all IPs that the user had
+    result_del = pf.del_alias(pfsession, alias, username)
+    result_apply = pf.apply_changes(pfsession)
+
+    # delete user and all data from the home folder
+    result_user = u.remove_user(username)
+
+    # send slack message
+    if SLACK_WEBHOOK:
+            s.send_message('The user ' + username + ' has been deleted and all whitelisted IPs have been removed. This was requested by ' + request.remote_addr)
+
+    return jsonify({'pfsense_result_code': result_del,'remove_user_exit_code': result_user}), 200
