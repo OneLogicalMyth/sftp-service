@@ -71,9 +71,9 @@ chmod 440 /etc/sudoers.d/sftp
 echo "[*] Upgrading pip"
 pip install --upgrade pip
 echo "[*] Installing flask"
-# work around to fix the current import main issues after upgrade to version 10 pip
-echo "pip install Flask" | bash
-echo "pip install requests" | bash
+hash -d pip
+pip install Flask
+pip install requests
 
 # Add localhost entry for the site, this can be changed to anything later...
 printf "\n127.0.0.1 api-service.local\n" >> /etc/hosts
