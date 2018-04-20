@@ -47,6 +47,12 @@ wget -O /opt/sftp-service/config.json -q https://raw.githubusercontent.com/OneLo
 wget -O /opt/sftp-service/api.wsgi -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.wsgi
 wget -O /etc/apache2/sites-available/api.conf -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.conf
 
+# setup the maintence script to run daily at 8am
+wget -O /opt/sftp-service/maintenance.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/maintenance.py
+echo "0 8 * * * python /opt/sftp-service/maintenance.py" > /tmp/cron_api
+crontab /tmp/cron_api
+rm /tmp/cron_api
+
 # secure the config file
 chmod 460 /opt/sftp-service/config.json
 chown sftp-service /opt/sftp-service/config.json
