@@ -13,6 +13,7 @@ apt install pwgen whois python-pip openssh-server apache2 libapache2-mod-wsgi cu
 echo "[*] Creating the SFTP directory"
 mkdir -p /var/sftp
 mkdir -p /opt/sftp-service
+chown sftp-service /opt/sftp-service
 echo "[*] Creating the sftp group"
 groupadd sftp
 echo "[*] Creating the sftp-service user"
@@ -40,6 +41,7 @@ wget -O /opt/sftp-service/blacklist.py -q https://raw.githubusercontent.com/OneL
 wget -O /opt/sftp-service/helper.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/helper.py
 wget -O /opt/sftp-service/slack.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/slack.py
 wget -O /opt/sftp-service/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/user.py
+wget -O /opt/sftp-service/database.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/database.py
 wget -O /opt/sftp-service/pfsense.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/pfsense.py
 wget -O /opt/sftp-service/config.json -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/config.json
 wget -O /opt/sftp-service/api.wsgi -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.wsgi
@@ -48,10 +50,6 @@ wget -O /etc/apache2/sites-available/api.conf -q https://raw.githubusercontent.c
 # secure the config file
 chmod 460 /opt/sftp-service/config.json
 chown sftp-service /opt/sftp-service/config.json
-
-# create an empty blacklist file
-echo '{ "blacklist": [] }' > /opt/sftp-service/blacklist.json
-chown sftp-service /opt/sftp-service/blacklist.json
 
 # Configure sudo access for the sftp-service user
 echo "[*] Adding sftp sudo file to allow some root access for the api"
@@ -77,6 +75,7 @@ printf "\n127.0.0.1 api-service.local\n" >> /etc/hosts
 a2dissite 000-default.conf
 a2dismod status auth_basic authn_core authn_file authz_host authz_user autoindex -f
 mv /etc/modsecurity/modsecurity.conf{-recommended,}
+sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /etc/modsecurity/modsecurity.conf
 printf '\nServerSignature Off\nServerTokens Prod\n' >> /etc/apache2/apache2.conf
 
 # Enabling site and restarting apache2
@@ -94,4 +93,4 @@ echo "[READY]"
 echo "Send it a curl post request like:"
 echo "curl -H \"Content-Type: application/json\" -X POST -d '{\"token\":\"some-random-token-string\",\"username\":\"xyz\",\"extip\":\"1.1.1.1\"}' http://api-service.local/adduser"
 echo ""
-echo "Sometimes apache2 needs a further reload before use: service apache2 reload"
+echo "Now update the config.json and restart the apache2 service."
