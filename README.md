@@ -11,3 +11,6 @@ wget -O - -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/maste
 ```
 
 Once installed you can then start making use of the API using curl or any application you have developed to work with it.
+
+# Documentation
+Please read the [wiki](https://github.com/OneLogicalMyth/sftp-service/wiki)
