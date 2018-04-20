@@ -10,10 +10,4 @@ sudo su
 wget -O - -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/setup.sh | bash
 ```
 
-Note: At times the pip install seems to fail for reasons unkown ensure that flask and requests is installed if you notice any pip install errors during the scripts execution; this can be done by running:
-```
-pip install Flask
-pip install requests
-```
-
 Once installed you can then start making use of the API using curl or any application you have developed to work with it.
