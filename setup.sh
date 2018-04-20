@@ -13,13 +13,13 @@ apt install pwgen whois python-pip openssh-server apache2 libapache2-mod-wsgi cu
 echo "[*] Creating the SFTP directory"
 mkdir -p /var/sftp
 mkdir -p /opt/sftp-service
-chown sftp-service /opt/sftp-service
 echo "[*] Creating the sftp group"
 groupadd sftp
 echo "[*] Creating the sftp-service user"
 newpass=$(pwgen 25 1)
 encpass=$(mkpasswd -m sha-512 $newpass)
 useradd -m sftp-service -p $encpass
+chown sftp-service /opt/sftp-service
 
 # Configure chroot and sftp options
 echo "[*] Configuring the SSH server for chroot SFTP"
@@ -70,6 +70,7 @@ chmod 440 /etc/sudoers.d/sftp
 # Configure pip, requests and Flask
 echo "[*] Upgrading pip"
 pip install --upgrade pip
+sleep 5 #sleep 5 seconds see if this helps with pip install :/
 echo "[*] Installing flask"
 pip install Flask
 pip install requests
