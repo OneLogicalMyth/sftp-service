@@ -1,3 +1,8 @@
+import sys, os
+# set root directory so crontab runs
+sys.path.append('/opt/sftp-service')
+os.chdir('/opt/sftp-service')
+
 from user import user
 from pfsense import pfsense
 from slack import slack
@@ -36,7 +41,7 @@ userlist = db.get_user()
 del_userlist = []
 for user in userlist:
     created = datetime.strptime(user["created"], '%Y-%m-%d %H:%M:%S.%f')
-    expiry = created + timedelta(days = 1)#user["daysvalid"])
+    expiry = created + timedelta(days = user["daysvalid"])
     if datetime.now() > expiry:
         del_userlist.append(user["username"])
 
