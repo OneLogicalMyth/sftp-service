@@ -36,19 +36,18 @@ echo "" >> /etc/ssh/sshd_config
 service sshd restart
 
 # download api files
-wget -O /opt/sftp-service/api.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.py
-wget -O /opt/sftp-service/blacklist.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/blacklist.py
-wget -O /opt/sftp-service/helper.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/helper.py
-wget -O /opt/sftp-service/slack.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/slack.py
-wget -O /opt/sftp-service/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/user.py
-wget -O /opt/sftp-service/database.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/database.py
-wget -O /opt/sftp-service/pfsense.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/pfsense.py
-wget -O /opt/sftp-service/config.json -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/config.json
-wget -O /opt/sftp-service/api.wsgi -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.wsgi
-wget -O /etc/apache2/sites-available/api.conf -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/api.conf
+wget -O /opt/sftp-service/api.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/api.py
+wget -O /opt/sftp-service/blacklist.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/blacklist.py
+wget -O /opt/sftp-service/slack.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/slack.py
+wget -O /opt/sftp-service/user.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/user.py
+wget -O /opt/sftp-service/database.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/database.py
+wget -O /opt/sftp-service/pfsense.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/ufw.py
+wget -O /opt/sftp-service/config.json -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/config.json
+wget -O /opt/sftp-service/api.wsgi -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/api.wsgi
+wget -O /etc/apache2/sites-available/api.conf -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/api.conf
 
 # setup the maintence script to run daily at 8am
-wget -O /opt/sftp-service/maintenance.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/maintenance.py
+wget -O /opt/sftp-service/maintenance.py -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/maintenance.py
 echo "0 8 * * * python /opt/sftp-service/maintenance.py" > /tmp/cron_api
 crontab /tmp/cron_api
 rm /tmp/cron_api
@@ -65,6 +64,7 @@ echo "sftp-service ALL=(ALL) NOPASSWD:/usr/sbin/useradd" >> /etc/sudoers.d/sftp
 echo "sftp-service ALL=(ALL) NOPASSWD:/bin/mkdir" >> /etc/sudoers.d/sftp
 echo "sftp-service ALL=(ALL) NOPASSWD:/bin/rm" >> /etc/sudoers.d/sftp
 echo "sftp-service ALL=(ALL) NOPASSWD:/usr/sbin/deluser" >> /etc/sudoers.d/sftp
+echo "sftp-service ALL=(ALL) NOPASSWD:/usr/sbin/ufw" >> /etc/sudoers.d/sftp
 chmod 440 /etc/sudoers.d/sftp
 
 # Configure pip, requests and Flask
