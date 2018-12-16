@@ -1,8 +1,7 @@
 from flask import Flask, abort, request, jsonify
 from os.path import abspath, exists
 from user import user
-from pfsense import pfsense
-from helper import helper
+from ufw import ufw
 from blacklist import blacklist
 from slack import slack
 from database import database
@@ -28,17 +27,9 @@ with open(f_config, 'r') as json_data:
 # set vars based on config file
 SERVER_NAME = config.get('server','SFTP API Beta')
 CONFIG_TOKEN = config.get('token',str(uuid.uuid4()))
-PFSENSE_URL = config.get('pfsense_url',None)
-PFSENSE_USR = config.get('pfsense_usr',None)
-PFSENSE_PWD = config.get('pfsense_pwd',None)
-PFSENSE_AID = config.get('pfsense_aid',None)
 SLACK_WEBHOOK = config.get('slack_webhook',None)
 BLACKLIST_TIMEOUT = int(config.get('blacklist_expiry_mins',60))
 DAYS_VALID = config.get('days_valid',"30")
-
-if not PFSENSE_URL or not PFSENSE_USR or not PFSENSE_PWD or not PFSENSE_AID:
-    print "pfsense configuration missing in config.json"
-    sys.exit()
 
 print ' * API starting'
 print ' * Access token is ' + CONFIG_TOKEN
@@ -83,30 +74,8 @@ def run_prereq_tasks():
 # accept a POST request to /getip
 @app.route('/getip',methods=['POST'])
 def get_ip():
-    u = user();
-    data = request.get_json(silent=True)
-    token = data.get('token',None)
-    alias = data.get('alias',PFSENSE_AID)
-
-    # return 400 for missing arguments
-    if alias is None:
-        abort(400,description="You have an argument missing")
-
-    # check if pfsense alias is valid
-    if not re.match("^[0-9]+$", alias):
-        abort(400,description="The pfsense alias is invalid")
-
-    # check if you can login to pfsense first
-    pf = pfsense(PFSENSE_URL)
-    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
-    if not pfsession:
-        abort(400,description="Failed to login to pfsense")
-
-    iplist = pf.get_alias(pfsession,alias)
-
-    # return the result
-    h = helper()
-    rawout = h.make_iplist(iplist)
+    fw = ufw()
+    rawout = fw.get_iplist()
     out = json.dumps(rawout, ensure_ascii=False, indent=4)
     return out, 200
 
@@ -114,11 +83,10 @@ def get_ip():
 @app.route('/addip',methods=['POST'])
 def add_ip():
     u = user()
+    fw = ufw()
     data = request.get_json(silent=True)
-    token = data.get('token',None)
     username = data.get('username',None)
     extip = data.get('extip',None)
-    alias = data.get('alias',PFSENSE_AID)
 
     # return 400 for missing arguments
     if username is None or extip is None:
@@ -127,10 +95,6 @@ def add_ip():
     # check if username is valid
     if not re.match("^[a-z0-9]+$", username):
         abort(400,description="Username is invalid")
-
-    # check if pfsense alias is valid
-    if not re.match("^[0-9]+$", alias):
-        abort(400,description="The pfsense alias is invalid")
 
     # check if username exists already
     username_exists = int(u.check_user(username))
@@ -141,16 +105,11 @@ def add_ip():
     if not re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", extip):
         abort(400,description="Invalid external IP address given")
 
-    # check if you can login to pfsense first
-    pf = pfsense(PFSENSE_URL)
-    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
-    if not pfsession:
-        abort(400,description="Failed to login to pfsense")
-
-    # add IP to alias for whitelisting
-    alias_detail = username + '|' + str(datetime.datetime.now().isoformat())
-    result_add = pf.add_alias(pfsession,alias,extip,alias_detail)
-    result_apply = pf.apply_changes(pfsession)
+    # create comment string and add ufw rule
+    comment = username + '|' + str(datetime.datetime.now().isoformat())
+    result = fw.add_ip(extip,comment)
+    if not result:
+        abort(500,description="Failed to add IP address to white list")
 
     # send slack messaage
     if SLACK_WEBHOOK:
@@ -164,12 +123,11 @@ def add_ip():
 @app.route('/adduser',methods=['POST'])
 def add_user():
     u = user()
+    fw = ufw()
     data = request.get_json(silent=True)
-    token = data.get('token',None)
     username = data.get('username',None)
     extip = data.get('extip',None)
     daysvalid = data.get('daysvalid',DAYS_VALID)
-    alias = data.get('alias',PFSENSE_AID)
 
     # return 400 for missing arguments
     if username is None or extip is None:
@@ -179,10 +137,6 @@ def add_user():
     if not re.match("^[a-z0-9]+$", username):
         abort(400,description="Username is invalid")
 
-    # check if pfsense alias is valid
-    if not re.match("^[0-9]+$", alias):
-        abort(400,description="The pfsense alias is invalid")
-    
     # check if daysvalid is valid
     if not re.match("^[0-9]+$", daysvalid):
         abort(400,description="The number of days valid is invalid")
@@ -196,21 +150,16 @@ def add_user():
     if not re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", extip):
         abort(400,description="Invalid external IP address given")
 
-    # check if you can login to pfsense first
-    pf = pfsense(PFSENSE_URL)
-    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
-    if not pfsession:
-        abort(400,description="Failed to login to pfsense")
-
     # create the users home folder with correct permissions
     plaintext_password = str(uuid.uuid4())[0:13]
     user_created = u.new_user(username,plaintext_password,daysvalid,request.remote_addr)
     new_home = u.new_home(username)
 
-    # add IP to alias for whitelisting
-    alias_detail = username + '|' + str(datetime.datetime.now().isoformat())
-    result_add = pf.add_alias(pfsession,alias,extip,alias_detail)
-    result_apply = pf.apply_changes(pfsession)
+    # create comment string and add ufw rule
+    comment = username + '|' + str(datetime.datetime.now().isoformat())
+    result = fw.add_ip(extip,comment)
+    if not result:
+        abort(500,description="Failed to add IP address to white list")
 
     # send slack message
     if SLACK_WEBHOOK:
@@ -224,9 +173,9 @@ def add_user():
 @app.route('/getuser',methods=['POST'])
 def get_user():
     u = user()
+    fw = ufw()
     data = request.get_json(silent=True)
     username = data.get('username',None)
-    alias = data.get('alias',PFSENSE_AID)
 
     # allow no username value to return all users
     if not username is None:
@@ -239,17 +188,8 @@ def get_user():
         if not username_exists == 1:
             abort(400,description="Username does not exist")
 
-    # check if you can login to pfsense first
-    pf = pfsense(PFSENSE_URL)
-    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
-    if not pfsession:
-        abort(400,description="Failed to login to pfsense")
-
-    iplist = pf.get_alias(pfsession,alias)
-
-    h = helper()
-    iplistonly = h.make_iplistonly(iplist)
-    user_data = u.get_user(username,iplistonly)
+    iplist = fw.get_iplistonly(username)
+    user_data = u.get_user(username,iplist)
 
     return jsonify(user_data), 200
 
@@ -257,36 +197,25 @@ def get_user():
 @app.route('/deluser',methods=['POST'])
 def del_user():
     u = user()
+    fw = ufw()
     data = request.get_json(silent=True)
     username = data.get('username',None)
-    alias = data.get('alias',PFSENSE_AID)
 
     # return 400 for missing arguments
-    if username is None or alias is None:
+    if username is None:
         abort(400,description="You have an argument missing")
 
     # check if username is valid
     if not re.match("^[a-z0-9]+$", username):
         abort(400,description="Username is invalid")
 
-    # check if pfsense alias is valid
-    if not re.match("^[0-9]+$", alias):
-        abort(400,description="The pfsense alias is invalid")
-
     # check if username exists already
     username_exists = int(u.check_user(username))
     if not username_exists == 1:
         abort(400,description="Username does not exist")
 
-    # check if you can login to pfsense first
-    pf = pfsense(PFSENSE_URL)
-    pfsession = pf.login(PFSENSE_USR,PFSENSE_PWD)
-    if not pfsession:
-        abort(400,description="Failed to login to pfsense")
-
     # delete all IPs that the user had
-    result_del = pf.del_alias(pfsession, alias, username)
-    result_apply = pf.apply_changes(pfsession)
+    result = fw.del_ip(username)
 
     # delete user and all data from the home folder
     result_user = u.remove_user(username)
@@ -295,4 +224,4 @@ def del_user():
     if SLACK_WEBHOOK:
             s.send_message('The user ' + username + ' has been deleted and all whitelisted IPs have been removed. This was requested by ' + request.remote_addr)
 
-    return jsonify({'pfsense_result_code': result_del,'remove_user_exit_code': result_user}), 200
+    return jsonify({'remove_user_exit_code': result_user}), 200
