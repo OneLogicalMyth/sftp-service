@@ -7,7 +7,7 @@ You can run this in production, however, you must test and configure the host to
 # Setup
 ```
 sudo su
-wget -O - -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/master/setup.sh | bash
+wget -O - -q https://raw.githubusercontent.com/OneLogicalMyth/sftp-service/ufw/setup.sh | bash
 ```
 
 Once installed you can then start making use of the API using curl or any application you have developed to work with it.
